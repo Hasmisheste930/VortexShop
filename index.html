@@ -93,7 +93,7 @@
                 instances: [{ prompt: prompt }],
                 parameters: {
                     "sampleCount": 1,
-                    "aspectRatio": "16:9" // Cinematic aspect ratio
+                    "aspectRatio": "1:1" // Requesting a square image
                 }
             };
 
@@ -116,15 +116,15 @@
                     console.log("Image generation successful.");
                 } else {
                     console.error("Image generation failed. No data found in response.");
-                    // Fallback to a placehold.co image
-                    imgElement.src = 'https://placehold.co/1200x675/0D9488/ffffff?text=Vortex+Product+Preview';
+                    // Fallback to a square placehold.co image
+                    imgElement.src = 'https://placehold.co/1000x1000/0D9488/ffffff?text=Vortex+Product+Preview';
                     imgElement.alt = "Fallback placeholder image.";
                 }
 
             } catch (error) {
                 console.error("API call failed after retries:", error);
-                // Fallback to a placehold.co image
-                imgElement.src = 'https://placehold.co/1200x675/0D9488/ffffff?text=Vortex+Product+Preview+Error';
+                // Fallback to a square placehold.co image
+                imgElement.src = 'https://placehold.co/1000x1000/0D9488/ffffff?text=Vortex+Product+Preview+Error';
                 imgElement.alt = "Fallback placeholder image.";
             } finally {
                 // Reset button state
@@ -138,35 +138,14 @@
             menu.classList.toggle('hidden');
         }
 
-        function showMessage(message) {
-            const msgBox = document.getElementById('message-box');
-            const msgText = document.getElementById('message-text');
-
-            msgText.textContent = message;
-            msgBox.classList.remove('opacity-0', 'pointer-events-none');
-            msgBox.classList.add('opacity-100');
-
-            setTimeout(() => {
-                msgBox.classList.remove('opacity-100');
-                msgBox.classList.add('opacity-0', 'pointer-events-none');
-            }, 3000);
-        }
-
         // Run this on page load to generate the primary hero image immediately
         window.onload = function() {
             // Initial call to generate the high-res hero image
-            const heroPrompt = "An ultra-sleek, minimalist futuristic device, primarily black and cyan, glowing with energy, 8k, photorealistic, cinematic shot, tech product photography, dark studio background.";
+            const heroPrompt = "An ultra-sleek, minimalist futuristic device, primarily black and cyan, glowing with energy, 8k, photorealistic, cinematic shot, dark studio background.";
             generateProductImage(heroPrompt, 'hero-product-image', 'generate-button');
         };
 
     </script>
-
-    <!-- Global Message Box (Instead of alert()) -->
-    <div id="message-box" class="fixed top-5 right-5 z-50 transition-opacity duration-500 opacity-0 pointer-events-none">
-        <div class="bg-vortex-primary text-white p-3 rounded-lg shadow-2xl max-w-xs">
-            <p id="message-text" class="font-semibold"></p>
-        </div>
-    </div>
 
     <!-- Header / Navigation -->
     <header class="sticky top-0 z-40 bg-vortex-bg border-b border-vortex-primary/50 shadow-lg">
@@ -187,14 +166,8 @@
                     <a href="#contact" class="text-gray-300 hover:text-vortex-secondary transition duration-300 font-medium">Contact</a>
                 </nav>
 
-                <!-- Cart Icon -->
+                <!-- Mobile Menu Button Only (Cart Removed) -->
                 <div class="flex items-center space-x-4">
-                    <button onclick="showMessage('Cart is currently empty. Start exploring!')" class="p-2 rounded-full hover:bg-vortex-primary/20 transition duration-300">
-                        <!-- Shopping Cart Icon (Lucide SVG) -->
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-vortex-secondary"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-                    </button>
-
-                    <!-- Mobile Menu Button -->
                     <button type="button" onclick="toggleMobileMenu()" class="md:hidden p-2 rounded-lg hover:bg-vortex-primary/20 transition duration-300" aria-controls="mobile-menu" aria-expanded="false">
                         <!-- Menu Icon (Lucide SVG) -->
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-vortex-secondary"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
@@ -225,21 +198,21 @@
                 Experience technology redefined. The **Vortex Core** is not just a device; it's a gateway to unparalleled performance and design.
             </p>
 
-            <!-- Image Generation Placeholder / Result -->
+            <!-- Image Generation Placeholder / Result (Aspect-Square Class Added) -->
             <div class="max-w-4xl mx-auto mb-8 rounded-xl overflow-hidden shadow-2xl bg-gray-900 border-2 border-vortex-secondary/30 transition-all duration-500 hover:border-vortex-primary">
-                <div class="w-full aspect-video flex items-center justify-center p-6">
+                <div class="w-full aspect-square flex items-center justify-center p-6">
                     <!-- Loading Spinner for initial state -->
                     <svg class="animate-spin h-10 w-10 text-vortex-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    <img id="hero-product-image" src="" alt="Placeholder for Vortex Core Product Image" class="w-full h-full object-cover hidden rounded-lg shadow-xl" onerror="this.onerror=null;this.src='https://placehold.co/1200x675/0D9488/ffffff?text=Vortex+Product+Preview'" />
+                    <img id="hero-product-image" src="" alt="Placeholder for Vortex Core Product Image" class="w-full h-full object-cover hidden rounded-lg shadow-xl" onerror="this.onerror=null;this.src='https://placehold.co/1000x1000/0D9488/ffffff?text=Vortex+Product+Preview'" />
                 </div>
             </div>
 
             <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
                 <a href="#products" class="px-8 py-3 bg-vortex-primary text-vortex-bg font-bold text-lg rounded-full shadow-lg hover:bg-vortex-secondary transition duration-300 transform hover:scale-105">
-                    Shop The Core
+                    View Product Line
                 </a>
                 <button id="generate-button" onclick="generateProductImage('A hyper-detailed, neon-lit digital cityscape, black background, 8k, futuristic concept art.', 'hero-product-image', 'generate-button')" class="px-8 py-3 bg-vortex-bg text-vortex-primary border border-vortex-primary font-bold text-lg rounded-full shadow-lg hover:bg-vortex-primary/20 transition duration-300 transform hover:scale-105 flex items-center justify-center">
                     Regenerate Visual
@@ -255,60 +228,54 @@
 
                 <!-- Product Card 1: Quantum Headset -->
                 <div class="bg-gray-800 rounded-xl overflow-hidden shadow-xl border border-gray-700 hover:border-vortex-primary transition duration-300 transform hover:scale-[1.02]">
-                    <img src="dobby1.png" alt="Quantum Headset" class="w-full h-48 object-cover border-b border-gray-700">
+                    <!-- Placeholder image (1:1 ratio) -->
+                    <img src="dobby1.png" alt="Quantum Headset" class="w-full aspect-square object-cover border-b border-gray-700">
                     <div class="p-6">
                         <h3 class="font-title text-2xl font-semibold mb-2 text-vortex-secondary">Доби ключодържател</h3>
                         <p class="text-gray-400 mb-4 h-12 overflow-hidden"></p>
-                        <div class="flex justify-between items-center">
-                            <!-- UPDATED PRICE STRUCTURE -->
-                            <div class="flex flex-col items-start">
+                        
+                        <!-- Price structure only (no button) -->
+                        <div class="flex justify-center items-center pt-2">
+                            <div class="flex flex-col items-center">
                                 <span class="text-xl text-gray-500 line-through">1лв</span>
                                 <span class="text-3xl font-bold text-vortex-primary">0.70лв</span>
                             </div>
-                            <!-- END UPDATED PRICE STRUCTURE -->
-                            <button onclick="showMessage('Quantum Headset added to cart!')" class="px-4 py-2 bg-vortex-primary text-vortex-bg rounded-full font-semibold hover:bg-vortex-secondary transition duration-300">
-                                Add to Cart
-                            </button>
                         </div>
                     </div>
                 </div>
 
                 <!-- Product Card 2: Aura Keyboard -->
                 <div class="bg-gray-800 rounded-xl overflow-hidden shadow-xl border border-gray-700 hover:border-vortex-primary transition duration-300 transform hover:scale-[1.02]">
-                    <img src="https://placehold.co/600x400/14B8A6/000000?text=Aura+Keyboard" alt="Aura Keyboard" class="w-full h-48 object-cover border-b border-gray-700">
+                    <!-- Placeholder image (1:1 ratio) -->
+                    <img src="https://placehold.co/600x600/14B8A6/000000?text=Aura+Keyboard" alt="Aura Keyboard" class="w-full aspect-square object-cover border-b border-gray-700">
                     <div class="p-6">
                         <h3 class="font-title text-2xl font-semibold mb-2 text-vortex-secondary">Aura Keyboard</h3>
                         <p class="text-gray-400 mb-4 h-12 overflow-hidden">Tactile precision with fully customizable RGB lighting profiles.</p>
-                        <div class="flex justify-between items-center">
-                            <!-- UPDATED PRICE STRUCTURE -->
-                            <div class="flex flex-col items-start">
+                        
+                        <!-- Price structure only (no button) -->
+                        <div class="flex justify-center items-center pt-2">
+                            <div class="flex flex-col items-center">
                                 <span class="text-xl text-gray-500 line-through">$189.99</span>
                                 <span class="text-3xl font-bold text-vortex-primary">$149.99</span>
                             </div>
-                            <!-- END UPDATED PRICE STRUCTURE -->
-                            <button onclick="showMessage('Aura Keyboard added to cart!')" class="px-4 py-2 bg-vortex-primary text-vortex-bg rounded-full font-semibold hover:bg-vortex-secondary transition duration-300">
-                                Add to Cart
-                            </button>
                         </div>
                     </div>
                 </div>
 
                 <!-- Product Card 3: Plasma Mousepad -->
                 <div class="bg-gray-800 rounded-xl overflow-hidden shadow-xl border border-gray-700 hover:border-vortex-primary transition duration-300 transform hover:scale-[1.02]">
-                    <img src="https://placehold.co/600x400/0891B2/000000?text=Plasma+Mousepad" alt="Plasma Mousepad" class="w-full h-48 object-cover border-b border-gray-700">
+                    <!-- Placeholder image (1:1 ratio) -->
+                    <img src="https://placehold.co/600x600/0891B2/000000?text=Plasma+Mousepad" alt="Plasma Mousepad" class="w-full aspect-square object-cover border-b border-gray-700">
                     <div class="p-6">
                         <h3 class="font-title text-2xl font-semibold mb-2 text-vortex-secondary">Plasma Mat</h3>
                         <p class="text-gray-400 mb-4 h-12 overflow-hidden">Infused surface for maximum glide and responsive tracking.</p>
-                        <div class="flex justify-between items-center">
-                            <!-- UPDATED PRICE STRUCTURE -->
-                            <div class="flex flex-col items-start">
+                        
+                        <!-- Price structure only (no button) -->
+                        <div class="flex justify-center items-center pt-2">
+                            <div class="flex flex-col items-center">
                                 <span class="text-xl text-gray-500 line-through">$65.00</span>
                                 <span class="text-3xl font-bold text-vortex-primary">$45.00</span>
                             </div>
-                            <!-- END UPDATED PRICE STRUCTURE -->
-                            <button onclick="showMessage('Plasma Mat added to cart!')" class="px-4 py-2 bg-vortex-primary text-vortex-bg rounded-full font-semibold hover:bg-vortex-secondary transition duration-300">
-                                Add to Cart
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -388,4 +355,3 @@
 
 </body>
 </html>
-
