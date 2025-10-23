@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vortex Product Line - Browse</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom font import for a futuristic feel */
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600;800&display=swap');
+        :root {
+            font-family: 'Inter', sans-serif;
+        }
+        .font-title {
+            font-family: 'Orbitron', sans-serif;
+        }
+        /* Custom scrollbar for aesthetics */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #0D9488;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #1f2937;
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'vortex-bg': '#10172A',
+                        'vortex-primary': '#0D9488', /* Teal */
+                        'vortex-secondary': '#06B6D4', /* Cyan */
+                    },
+                }
+            }
+        }
+
+        // --- MOCK PRODUCT DATA ---
+        const products = [
+            { id: 1, name: "Neon Key Fob", category: "Keychains", price: 25.00, desc: "Illuminated key holder, never lose your keys in the dark.", image: "https://placehold.co/300x300/0D9488/ffffff?text=Keychains" },
+            { id: 2, name: "Flexy Cable Organizer", category: "Flexy", price: 15.00, desc: "Ultra-flexible silicone tie for cable management.", image: "https://placehold.co/300x300/06B6D4/ffffff?text=Flexy" },
+            { id: 3, name: "The Void Cube", category: "IdontKnow", price: 99.00, desc: "It defies description. It just exists. And it hums.", image: "https://placehold.co/300x300/4B5563/ffffff?text=IdontKnow" },
+            { id: 4, name: "Specter Projector", category: "Halloween", price: 149.00, desc: "Projects animated phantoms onto any surface for maximum fright.", image: "https://placehold.co/300x300/DC2626/ffffff?text=Halloween" },
+            { id: 5, name: "Hyper-Grip Keychain", category: "Keychains", price: 18.00, desc: "Textured military-grade grip for secure handling.", image: "https://placehold.co/300x300/0D9488/000000?text=Hyper+Grip" },
+            { id: 6, name: "Bio-Lattice Stand", category: "Flexy", price: 45.00, desc: "Moldable device stand adapts to any viewing angle.", image: "https://placehold.co/300x300/06B6D4/000000?text=Lattice" },
+            { id: 7, name: "Digital Pumpkin", category: "Halloween", price: 35.00, desc: "A smart pumpkin display with endless customization.", image: "https://placehold.co/300x300/DC2626/000000?text=Pumpkin" },
+            { id: 8, name: "Universal Gizmo", category: "IdontKnow", price: 65.00, desc: "We don't know what it does, but you need it.", image: "https://placehold.co/300x300/4B5563/000000?text=Gizmo" },
+            { id: 9, name: "Phantom Lantern", category: "Halloween", price: 75.00, desc: "An ambient light source that flickers with ghostly hues.", image: "https://placehold.co/300x300/941F1F/ffffff?text=Lantern" },
+            { id: 10, name: "Fusion Link Key", category: "Keychains", price: 30.00, desc: "A multi-tool keychain with magnetic locking mechanism.", image: "https://placehold.co/300x300/0D9488/000000?text=Fusion" },
+            { id: 11, name: "Stretch Grip Case", category: "Flexy", price: 35.00, desc: "Flexible polymer phone case with enhanced shock absorption.", image: "https://placehold.co/300x300/06B6D4/000000?text=Grip" },
+        ];
+
+        let currentCategory = 'All';
+        let searchTerm = '';
+
+        /**
+         * Renders the product grid based on current filters.
+         */
+        function renderProducts() {
+            const grid = document.getElementById('product-grid');
+            const filteredProducts = products.filter(product => {
+                const categoryMatch = currentCategory === 'All' || product.category === currentCategory;
+                const searchMatch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                    product.desc.toLowerCase().includes(searchTerm.toLowerCase());
+                return categoryMatch && searchMatch;
+            });
+
+            grid.innerHTML = ''; // Clear existing products
+
+            if (filteredProducts.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full text-center py-16">
+                        <p class="text-3xl text-gray-500 font-title">No results found.</p>
+                        <p class="text-gray-400 mt-2">Try adjusting your category or search term.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            filteredProducts.forEach(product => {
+                const productCard = `
+                    <div class="bg-gray-800 rounded-xl overflow-hidden shadow-xl border border-gray-700 transition duration-300 transform hover:scale-[1.02] hover:border-vortex-primary">
+                        <!-- Square Product Image (1:1 aspect ratio) -->
+                        <img src="${product.image}" alt="${product.name}" class="w-full aspect-square object-cover border-b border-gray-700">
+                        <div class="p-6">
+                            <h3 class="font-title text-xl font-semibold mb-2 text-vortex-secondary">${product.name}</h3>
+                            <p class="text-gray-400 mb-4 h-12 overflow-hidden text-sm">${product.desc}</p>
+
+                            <!-- Price Display -->
+                            <div class="flex justify-between items-center pt-2">
+                                <span class="text-2xl font-bold text-vortex-primary">$${product.price.toFixed(2)}</span>
+                                <button onclick="handleDetailClick('${product.name}')" class="px-3 py-1 bg-vortex-primary text-vortex-bg rounded-full font-medium text-sm hover:bg-vortex-secondary transition duration-300">
+                                    View Details
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                grid.innerHTML += productCard;
+            });
+
+            updateActiveCategoryLink();
+        }
+
+        /**
+         * Updates the active state of category links in the sidebar.
+         */
+        function updateActiveCategoryLink() {
+            document.querySelectorAll('#category-list button').forEach(button => {
+                if (button.dataset.category === currentCategory) {
+                    button.classList.add('bg-vortex-primary', 'text-vortex-bg', 'font-bold');
+                    button.classList.remove('text-gray-300', 'hover:bg-vortex-primary/30');
+                } else {
+                    button.classList.remove('bg-vortex-primary', 'text-vortex-bg', 'font-bold');
+                    button.classList.add('text-gray-300', 'hover:bg-vortex-primary/30');
+                }
+            });
+        }
+
+        /**
+         * Filter handler for category buttons.
+         * @param {string} category - The category to filter by.
+         */
+        window.filterByCategory = function(category) {
+            currentCategory = category;
+            renderProducts();
+        }
+
+        /**
+         * Search handler for the input field.
+         * @param {string} term - The search term.
+         */
+        window.searchProducts = function(term) {
+            searchTerm = term.trim();
+            renderProducts();
+        }
+
+        /**
+         * Simulates a detail view click (since we don't have multiple pages).
+         * @param {string} productName - The name of the product.
+         */
+        window.handleDetailClick = function(productName) {
+            const messageBox = document.getElementById('detail-message-box');
+            messageBox.querySelector('p').textContent = `Viewing details for: ${productName}. This would link to a dedicated product page.`;
+            messageBox.classList.remove('translate-y-full');
+            messageBox.classList.add('translate-y-0');
+
+            setTimeout(() => {
+                messageBox.classList.add('translate-y-full');
+                messageBox.classList.remove('translate-y-0');
+            }, 3000);
+        }
+
+        // Initialize the product display on load
+        window.onload = renderProducts;
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        }
+    </script>
+</head>
+<body class="bg-vortex-bg text-gray-100 min-h-screen flex flex-col">
+
+    <!-- Detail View Message Box (Replaces alert()) -->
+    <div id="detail-message-box" class="fixed bottom-0 left-0 right-0 z-50 transform translate-y-full transition-transform duration-500">
+        <div class="bg-vortex-secondary text-vortex-bg p-4 shadow-2xl text-center">
+            <p class="font-semibold"></p>
+        </div>
+    </div>
+
+    <!-- Header / Navigation -->
+    <header class="sticky top-0 z-40 bg-vortex-bg border-b border-vortex-primary/50 shadow-lg">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <a href="#" class="flex-shrink-0">
+                    <span class="font-title text-2xl font-bold text-vortex-secondary hover:text-vortex-primary transition duration-300">
+                        VORTEX SHOP
+                    </span>
+                </a>
+
+                <!-- Desktop Navigation Links -->
+                <nav class="hidden md:flex space-x-8">
+                    <a href="#" onclick="filterByCategory('All')" class="text-gray-300 hover:text-vortex-secondary transition duration-300 font-medium">Home</a>
+                    <a href="#" onclick="filterByCategory('All')" class="text-gray-300 hover:text-vortex-secondary transition duration-300 font-medium">Products</a>
+                    <a href="#" class="text-gray-300 hover:text-vortex-secondary transition duration-300 font-medium">About</a>
+                    <a href="#" class="text-gray-300 hover:text-vortex-secondary transition duration-300 font-medium">Contact</a>
+                </nav>
+
+                <!-- Mobile Menu Button Only -->
+                <button type="button" onclick="toggleMobileMenu()" class="md:hidden p-2 rounded-lg hover:bg-vortex-primary/20 transition duration-300" aria-controls="mobile-menu" aria-expanded="false">
+                    <!-- Menu Icon (Lucide SVG) -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-vortex-secondary"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Menu (Toggle Class) -->
+        <div class="md:hidden hidden" id="mobile-menu">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-vortex-primary/50">
+                <a href="#" onclick="filterByCategory('All')" class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-vortex-primary/30">Home</a>
+                <a href="#" onclick="filterByCategory('All')" class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-vortex-primary/30">Products</a>
+                <a href="#" class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-vortex-primary/30">About</a>
+                <a href="#" class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-vortex-primary/30">Contact</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area: Sidebar and Grid -->
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow">
+        <h1 class="font-title text-4xl font-extrabold mb-8 text-center text-vortex-secondary">
+            PRODUCT PORTALS
+        </h1>
+
+        <!-- Layout Container: Sidebar (md:flex) and Main Content -->
+        <div class="md:grid md:grid-cols-[250px_1fr] gap-8">
+
+            <!-- Sidebar / Category Filter -->
+            <div class="mb-8 md:mb-0">
+                <div class="bg-gray-900 p-6 rounded-xl shadow-lg border border-vortex-primary/30">
+                    <h2 class="font-title text-xl font-bold mb-4 text-vortex-primary">Categories</h2>
+                    <nav id="category-list" class="space-y-2 flex flex-wrap md:flex-col gap-2">
+                        <button data-category="All" onclick="filterByCategory('All')" class="w-full text-left px-3 py-2 rounded-lg transition duration-200">
+                            All Products
+                        </button>
+                        <button data-category="Keychains" onclick="filterByCategory('Keychains')" class="w-full text-left px-3 py-2 text-gray-300 rounded-lg hover:bg-vortex-primary/30 transition duration-200">
+                            Keychains
+                        </button>
+                        <button data-category="Flexy" onclick="filterByCategory('Flexy')" class="w-full text-left px-3 py-2 text-gray-300 rounded-lg hover:bg-vortex-primary/30 transition duration-200">
+                            Flexy
+                        </button>
+                        <button data-category="IdontKnow" onclick="filterByCategory('IdontKnow')" class="w-full text-left px-3 py-2 text-gray-300 rounded-lg hover:bg-vortex-primary/30 transition duration-200">
+                            IdontKnow
+                        </button>
+                        <button data-category="Halloween" onclick="filterByCategory('Halloween')" class="w-full text-left px-3 py-2 text-gray-300 rounded-lg hover:bg-vortex-primary/30 transition duration-200">
+                            Halloween
+                        </button>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Main Product Area -->
+            <div>
+                <!-- Search Bar -->
+                <div class="mb-8 relative">
+                    <input
+                        type="text"
+                        id="search-input"
+                        placeholder="Search products by name or description..."
+                        oninput="searchProducts(this.value)"
+                        class="w-full px-6 py-3 pr-12 rounded-full bg-gray-900 text-gray-100 border-2 border-vortex-secondary/50 focus:border-vortex-primary focus:outline-none transition duration-300 placeholder-gray-500"
+                    />
+                    <!-- Search Icon -->
+                    <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-vortex-primary/70"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    </div>
+                </div>
+
+                <!-- Product Grid -->
+                <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <!-- Products will be rendered here by JavaScript -->
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 border-t border-vortex-primary/50 py-8 mt-12">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="mt-8 pt-6 border-t border-gray-700 text-center">
+                <p class="text-gray-500 text-sm">&copy; 2025 Vortex Shop. All rights reserved. Technology powered by Gemini.</p>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>
