@@ -3,36 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vortex Shop - Next-Gen Tech</title>
+    <title>Vortex Shop </title>
     <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Custom font import for a futuristic feel */
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600;800&display=swap');
+        
+        /* ---------------------------------------------------- */
+        /* --- CSS VARIABLES FOR THEME SWITCHING --- */
+        /* ---------------------------------------------------- */
         :root {
             font-family: 'Inter', sans-serif;
+            /* Default: Dark Theme */
+            --color-bg: #10172A;
+            --color-text: #E5E7EB;
+            --color-primary: #0D9488; /* Teal */
+            --color-secondary: #06B6D4; /* Cyan */
+            --color-card-bg: #1F2937;
+            --color-border-subtle: #374151;
+            --color-link-default: #9CA3AF;
+        }
+        
+        .light-theme {
+            --color-bg: #F3F4F6;
+            --color-text: #1F2937;
+            --color-primary: #059669; /* Emerald */
+            --color-secondary: #0891B2; /* Sky Blue */
+            --color-card-bg: #FFFFFF;
+            --color-border-subtle: #D1D5DB;
+            --color-link-default: #4B5563;
+        }
+
+        /* Apply variables globally and add transition */
+        body {
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            transition: background-color 0.4s, color 0.4s;
         }
         .font-title {
             font-family: 'Orbitron', sans-serif;
         }
-    </style>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'vortex-bg': '#10172A',
-                        'vortex-primary': '#0D9488', /* Teal */
-                        'vortex-secondary': '#06B6D4', /* Cyan */
-                    },
-                }
-            }
-        }
-    </script>
-</head>
-<body class="bg-vortex-bg text-gray-100 min-h-screen">
+        
+        /* Custom Utility Classes using Variables for seamless theming */
+        .text-default { color: var(--color-text); }
+        .text-vortex-primary-var { color: var(--color-primary); }
+        .bg-vortex-primary-var { background-color: var(--color-primary); }
+        .text-vortex-secondary-var { color: var(--color-secondary); }
+        .bg-vortex-card-var { background-color: var(--color-card-bg); }
+        .border-vortex-border-subtle-var { border-color: var(--color-border-subtle); }
+        .text-vortex-link-default { color: var(--color-link-default); }
 
-    <!-- Gemini API Configuration (Leave as empty string) -->
+        /* Enhanced Interaction Styles */
+        .nav-link:hover { color: var(--color-secondary); transform: translateY(-1px); }
+        .nav-link { transition: color 0.3s, transform 0.3s; }
+        .hero-btn:hover { transform: scale(1.05) rotateZ(1deg); box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+        .hero-btn { transition: transform 0.3s, box-shadow 0.3s; }
+
+    </style>
     <script>
         const apiKey = "";
         const imageModel = "imagen-3.0-generate-002";
@@ -40,17 +68,12 @@
 
         /**
          * Generic fetch utility with exponential backoff for retries.
-         * @param {string} url - The API endpoint URL.
-         * @param {object} options - Fetch options (method, headers, body).
-         * @param {number} maxRetries - Maximum number of retries.
-         * @returns {Promise<Response>} The fetch response.
          */
         async function exponentialBackoffFetch(url, options, maxRetries = 5) {
             for (let i = 0; i < maxRetries; i++) {
                 try {
                     const response = await fetch(url, options);
                     if (!response.ok) {
-                        // Check if it's a transient error (e.g., 429, 5xx)
                         if (response.status === 429 || response.status >= 500) {
                             throw new Error(`Server error: ${response.status}`);
                         }
@@ -59,8 +82,6 @@
                 } catch (error) {
                     console.error(`Attempt ${i + 1} failed:`, error);
                     if (i === maxRetries - 1) throw error;
-
-                    // Wait for an exponentially increasing delay
                     const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
                     await new Promise(resolve => setTimeout(resolve, delay));
                 }
@@ -69,9 +90,6 @@
 
         /**
          * Generates an image using the Gemini API and updates an element's source.
-         * @param {string} prompt - The image description.
-         * @param {string} elementId - The ID of the <img> element to update.
-         * @param {string} buttonId - The ID of the button to disable/show loading.
          */
         async function generateProductImage(prompt, elementId, buttonId) {
             const imgElement = document.getElementById(elementId);
@@ -112,18 +130,16 @@
                 if (base64Data) {
                     imgElement.src = `data:image/png;base64,${base64Data}`;
                     imgElement.alt = prompt;
-                    imgElement.classList.add('shadow-vortex-secondary'); // Apply shadow after load
+                    imgElement.classList.add('shadow-vortex-secondary-var'); // Use variable-based shadow
                     console.log("Image generation successful.");
                 } else {
                     console.error("Image generation failed. No data found in response.");
-                    // Fallback to a square placehold.co image
                     imgElement.src = 'https://placehold.co/1000x1000/0D9488/ffffff?text=Vortex+Product+Preview';
                     imgElement.alt = "Fallback placeholder image.";
                 }
 
             } catch (error) {
                 console.error("API call failed after retries:", error);
-                // Fallback to a square placehold.co image
                 imgElement.src = 'https://placehold.co/1000x1000/0D9488/ffffff?text=Vortex+Product+Preview+Error';
                 imgElement.alt = "Fallback placeholder image.";
             } finally {
@@ -138,51 +154,106 @@
             menu.classList.toggle('hidden');
         }
 
-        // Run this on page load to generate the primary hero image immediately
+        /* ---------------------------------------------------- */
+        /* --- THEME SWITCHING LOGIC --- */
+        /* ---------------------------------------------------- */
+
+        /**
+         * Applies the selected theme and saves the preference.
+         * @param {string} theme - 'dark' or 'light'.
+         */
+        function applyTheme(theme) {
+            const body = document.body;
+            const isDark = theme === 'dark';
+
+            if (isDark) {
+                body.classList.remove('light-theme');
+            } else {
+                body.classList.add('light-theme');
+            }
+
+            // Update theme toggle icon (Lucide sun/moon icons)
+            const icon = document.getElementById('theme-icon');
+            if (icon) {
+                icon.innerHTML = isDark
+                    ? `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>` // Moon Icon
+                    : `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>`; // Sun Icon
+            }
+
+            localStorage.setItem('theme', theme);
+        }
+
+        /**
+         * Toggles between dark and light themes.
+         */
+        window.toggleTheme = function() {
+            const currentTheme = document.body.classList.contains('light-theme') ? 'light' : 'dark';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            applyTheme(newTheme);
+        }
+
+        // On load logic
         window.onload = function() {
-            // Initial call to generate the high-res hero image
+            // 1. Apply stored theme or default to dark (per user request)
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            applyTheme(savedTheme);
+
+            // 2. Initial call to generate the high-res hero image
             const heroPrompt = "An ultra-sleek, minimalist futuristic device, primarily black and cyan, glowing with energy, 8k, photorealistic, cinematic shot, dark studio background.";
             generateProductImage(heroPrompt, 'hero-product-image', 'generate-button');
         };
 
     </script>
 
+</head>
+<body class="bg-vortex-bg-var text-default min-h-screen">
+
     <!-- Header / Navigation -->
-    <header class="sticky top-0 z-40 bg-vortex-bg border-b border-vortex-primary/50 shadow-lg">
+    <header class="sticky top-0 z-40 bg-vortex-card-var border-b border-vortex-primary-var/50 shadow-lg">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 <!-- Logo -->
                 <a href="#" class="flex-shrink-0">
-                    <span class="font-title text-2xl font-bold text-vortex-secondary hover:text-vortex-primary transition duration-300">
+                    <span class="font-title text-2xl font-bold text-vortex-secondary-var hover:text-vortex-primary-var transition duration-300">
                         VORTEX SHOP
                     </span>
                 </a>
 
                 <!-- Desktop Navigation Links -->
-                <nav class="hidden md:flex space-x-8">
-                    <a href="#hero" class="text-gray-300 hover:text-vortex-secondary transition duration-300 font-medium">Home</a>
-                    <a href="#products" class="text-gray-300 hover:text-vortex-secondary transition duration-300 font-medium">Products</a>
-                    <a href="#about" class="text-gray-300 hover:text-vortex-secondary transition duration-300 font-medium">About</a>
-                    <a href="#contact" class="text-gray-300 hover:text-vortex-secondary transition duration-300 font-medium">Contact</a>
+                <nav class="hidden md:flex items-center space-x-8">
+                    <a href="#hero" class="nav-link text-vortex-link-default font-medium">Home</a>
+                    <!-- Removed Featured link -->
+                    <!-- Updated All Products link -->
+                    <a href="product.html" class="nav-link text-vortex-secondary-var font-bold border-b-2 border-transparent hover:border-vortex-primary-var pb-1">Browse Products</a>
+                    
+                    <a href="#about" class="nav-link text-vortex-link-default font-medium">About</a>
+                    <a href="#contact" class="nav-link text-vortex-link-default font-medium">Contact</a>
                 </nav>
 
-                <!-- Mobile Menu Button Only (Cart Removed) -->
+                <!-- Theme Toggle & Mobile Menu Button -->
                 <div class="flex items-center space-x-4">
-                    <button type="button" onclick="toggleMobileMenu()" class="md:hidden p-2 rounded-lg hover:bg-vortex-primary/20 transition duration-300" aria-controls="mobile-menu" aria-expanded="false">
+                    <!-- Theme Toggle Button -->
+                    <button onclick="toggleTheme()" class="p-2 rounded-full text-vortex-primary-var hover:bg-vortex-primary-var/20 transition duration-300 transform hover:scale-110" aria-label="Toggle theme">
+                        <!-- Icon will be set by JavaScript on load -->
+                        <span id="theme-icon"></span>
+                    </button>
+
+                    <!-- Mobile Menu Button Only -->
+                    <button type="button" onclick="toggleMobileMenu()" class="md:hidden p-2 rounded-lg text-vortex-secondary-var hover:bg-vortex-primary-var/20 transition duration-300" aria-controls="mobile-menu" aria-expanded="false">
                         <!-- Menu Icon (Lucide SVG) -->
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-vortex-secondary"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
                     </button>
                 </div>
             </div>
         </div>
 
         <!-- Mobile Menu (Toggle Class) -->
-        <div class="md:hidden hidden" id="mobile-menu">
-            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-vortex-primary/50">
-                <a href="#hero" class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-vortex-primary/30">Home</a>
-                <a href="#products" class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-vortex-primary/30">Products</a>
-                <a href="#about" class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-vortex-primary/30">About</a>
-                <a href="#contact" class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-vortex-primary/30">Contact</a>
+        <div class="md:hidden hidden bg-vortex-card-var" id="mobile-menu">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-vortex-border-subtle-var">
+                <a href="#hero" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-vortex-link-default hover:bg-vortex-primary-var/20">Home</a>
+                <a href="product.html" class="nav-link block px-3 py-2 rounded-md text-base font-bold text-vortex-secondary-var bg-vortex-primary-var/20 hover:bg-vortex-primary-var/30">Browse Products</a>
+                <a href="#about" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-vortex-link-default hover:bg-vortex-primary-var/20">About</a>
+                <a href="#contact" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-vortex-link-default hover:bg-vortex-primary-var/20">Contact</a>
             </div>
         </div>
     </header>
@@ -190,19 +261,19 @@
     <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
 
         <!-- 1. Hero Section -->
-        <section id="hero" class="text-center py-20 md:py-32 border-b border-vortex-primary/50 mb-12">
-            <h1 class="font-title text-5xl md:text-7xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-vortex-secondary to-vortex-primary leading-tight">
+        <section id="hero" class="text-center py-20 md:py-32 border-b border-vortex-primary-var/50 mb-12">
+            <h1 class="font-title text-5xl md:text-7xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-vortex-secondary-var to-vortex-primary-var leading-tight">
                 ENTER THE NEXT DIMENSION.
             </h1>
-            <p class="max-w-3xl mx-auto text-xl text-gray-400 mb-8">
+            <p class="max-w-3xl mx-auto text-xl text-vortex-link-default mb-8">
                 Experience technology redefined. The **Vortex Core** is not just a device; it's a gateway to unparalleled performance and design.
             </p>
 
-            <!-- Image Generation Placeholder / Result (Aspect-Square Class Added) -->
-            <div class="max-w-4xl mx-auto mb-8 rounded-xl overflow-hidden shadow-2xl bg-gray-900 border-2 border-vortex-secondary/30 transition-all duration-500 hover:border-vortex-primary">
+            <!-- Image Generation Placeholder / Result -->
+            <div class="max-w-4xl mx-auto mb-8 rounded-xl overflow-hidden shadow-2xl bg-vortex-card-var border-2 border-vortex-secondary-var/30 transition-all duration-500 hover:border-vortex-primary-var">
                 <div class="w-full aspect-square flex items-center justify-center p-6">
                     <!-- Loading Spinner for initial state -->
-                    <svg class="animate-spin h-10 w-10 text-vortex-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <svg class="animate-spin h-10 w-10 text-vortex-primary-var" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
@@ -211,121 +282,26 @@
             </div>
 
             <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
-                <a href="#products" class="px-8 py-3 bg-vortex-primary text-vortex-bg font-bold text-lg rounded-full shadow-lg hover:bg-vortex-secondary transition duration-300 transform hover:scale-105">
-                    View Product Line
+                <!-- Updated Button Text and Class for Interaction -->
+                <a href="product.html" class="hero-btn px-8 py-3 bg-vortex-primary-var text-vortex-card-bg font-bold text-lg rounded-full shadow-lg hover:bg-vortex-secondary-var focus:ring-4 focus:ring-vortex-primary-var/50">
+                    Browse Products
                 </a>
-                <button id="generate-button" onclick="generateProductImage('A hyper-detailed, neon-lit digital cityscape, black background, 8k, futuristic concept art.', 'hero-product-image', 'generate-button')" class="px-8 py-3 bg-vortex-bg text-vortex-primary border border-vortex-primary font-bold text-lg rounded-full shadow-lg hover:bg-vortex-primary/20 transition duration-300 transform hover:scale-105 flex items-center justify-center">
+                <button id="generate-button" onclick="generateProductImage('A hyper-detailed, neon-lit digital cityscape, black background, 8k, futuristic concept art.', 'hero-product-image', 'generate-button')" class="hero-btn px-8 py-3 bg-transparent text-vortex-primary-var border border-vortex-primary-var font-bold text-lg rounded-full shadow-lg hover:bg-vortex-primary-var/20 focus:ring-4 focus:ring-vortex-primary-var/50 flex items-center justify-center">
                     Regenerate Visual
                 </button>
             </div>
         </section>
-
-        <!-- 2. Featured Products Section -->
-        <section id="products" class="py-12">
-            <h2 class="font-title text-4xl font-bold text-center mb-12 text-vortex-secondary">Featured Portals</h2>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-
-                <!-- Product Card 1: Quantum Headset -->
-                <div class="bg-gray-800 rounded-xl overflow-hidden shadow-xl border border-gray-700 hover:border-vortex-primary transition duration-300 transform hover:scale-[1.02]">
-                    <!-- Placeholder image (1:1 ratio) -->
-                    <img src="dobby1.png" alt="Quantum Headset" class="w-full aspect-square object-cover border-b border-gray-700">
-                    <div class="p-6">
-                        <h3 class="font-title text-2xl font-semibold mb-2 text-vortex-secondary">Доби ключодържател</h3>
-                        <p class="text-gray-400 mb-4 h-12 overflow-hidden"></p>
-                        
-                        <!-- Price structure only (no button) -->
-                        <div class="flex justify-center items-center pt-2">
-                            <div class="flex flex-col items-center">
-                                <span class="text-xl text-gray-500 line-through">1.50лв</span>
-                                <span class="text-3xl font-bold text-vortex-primary">1лв</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Product Card 2: Aura Keyboard -->
-                <div class="bg-gray-800 rounded-xl overflow-hidden shadow-xl border border-gray-700 hover:border-vortex-primary transition duration-300 transform hover:scale-[1.02]">
-                    <!-- Placeholder image (1:1 ratio) -->
-                    <img src="Sigma1.jpg" alt="Aura Keyboard" class="w-full aspect-square object-cover border-b border-gray-700">
-                    <div class="p-6">
-                        <h3 class="font-title text-2xl font-semibold mb-2 text-vortex-secondary">Сигма октопод</h3>
-                        <p class="text-gray-400 mb-4 h-12 overflow-hidden"></p>
-                        
-                        <!-- Price structure only (no button) -->
-                        <div class="flex justify-center items-center pt-2">
-                            <div class="flex flex-col items-center">
-                                <span class="text-xl text-gray-500 line-through">2лв</span>
-                                <span class="text-3xl font-bold text-vortex-primary">1.50лв</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Product Card 3: Plasma Mousepad -->
-                <div class="bg-gray-800 rounded-xl overflow-hidden shadow-xl border border-gray-700 hover:border-vortex-primary transition duration-300 transform hover:scale-[1.02]">
-                    <!-- Placeholder image (1:1 ratio) -->
-                    <img src="HarryPotter1.jpg" alt="Plasma Mousepad" class="w-full aspect-square object-cover border-b border-gray-700">
-                    <div class="p-6">
-                        <h3 class="font-title text-2xl font-semibold mb-2 text-vortex-secondary">Книгоразделител HarryPotter</h3>
-                        <p class="text-gray-400 mb-4 h-12 overflow-hidden"></p>
-                        
-                        <!-- Price structure only (no button) -->
-                        <div class="flex justify-center items-center pt-2">
-                            <div class="flex flex-col items-center">
-                                <span class="text-xl text-gray-500 line-through">1.50лв</span>
-                                <span class="text-3xl font-bold text-vortex-primary">1лв</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                    <div class="bg-gray-800 rounded-xl overflow-hidden shadow-xl border border-gray-700 hover:border-vortex-primary transition duration-300 transform hover:scale-[1.02]">
-                    <!-- Placeholder image (1:1 ratio) -->
-                    <img src="Flexy1.png" alt="Plasma Mousepad" class="w-full aspect-square object-cover border-b border-gray-700">
-                    <div class="p-6">
-                        <h3 class="font-title text-2xl font-semibold mb-2 text-vortex-secondary">Разтегателно куче кремвирш</h3>
-                        <p class="text-gray-400 mb-4 h-12 overflow-hidden"></p>
-                        
-                        <!-- Price structure only (no button) -->
-                        <div class="flex justify-center items-center pt-2">
-                            <div class="flex flex-col items-center">
-                                <span class="text-xl text-gray-500 line-through">2лв</span>
-                                <span class="text-3xl font-bold text-vortex-primary">1.50лв</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                    <div class="bg-gray-800 rounded-xl overflow-hidden shadow-xl border border-gray-700 hover:border-vortex-primary transition duration-300 transform hover:scale-[1.02]">
-                    <!-- Placeholder image (1:1 ratio) -->
-                    <img src="Flexy2.jpeg" alt="Plasma Mousepad" class="w-full aspect-square object-cover border-b border-gray-700">
-                    <div class="p-6">
-                        <h3 class="font-title text-2xl font-semibold mb-2 text-vortex-secondary">Ключодържател патица</h3>
-                        <p class="text-gray-400 mb-4 h-12 overflow-hidden"></p>
-                        
-                        <!-- Price structure only (no button) -->
-                        <div class="flex justify-center items-center pt-2">
-                            <div class="flex flex-col items-center">
-                                <span class="text-xl text-gray-500 line-through">2лв</span>
-                                <span class="text-3xl font-bold text-vortex-primary">1.50лв</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </section>
-
-        <!-- 3. Call to Action / About -->
-        <section id="about" class="py-16 text-center bg-gray-900 rounded-xl my-12 p-8 shadow-2xl border border-vortex-secondary/30">
-            <h2 class="font-title text-4xl font-extrabold mb-4 text-vortex-primary">
+        
+        <!-- 2. Call to Action / About -->
+        <!-- Featured Products Section was removed as requested -->
+        <section id="about" class="py-16 text-center bg-vortex-card-var rounded-xl my-12 p-8 shadow-2xl border border-vortex-secondary-var/30">
+            <h2 class="font-title text-4xl font-extrabold mb-4 text-vortex-primary-var">
                 The Vortex Philosophy
             </h2>
-            <p class="max-w-4xl mx-auto text-lg text-gray-300 mb-6">
+            <p class="max-w-4xl mx-auto text-lg text-vortex-link-default mb-6">
                 We believe in bridging the gap between imagination and reality. Every product in the Vortex Shop is rigorously tested for quality, sustainability, and most importantly, performance that transcends current market standards. Join the evolution.
             </p>
-            <a href="#contact" class="px-6 py-2 border-2 border-vortex-secondary text-vortex-secondary font-semibold rounded-full hover:bg-vortex-secondary hover:text-vortex-bg transition duration-300">
+            <a href="#contact" class="px-6 py-2 border-2 border-vortex-secondary-var text-vortex-secondary-var font-semibold rounded-full hover:bg-vortex-secondary-var hover:text-vortex-card-bg transition duration-300 transform hover:scale-105">
                 Learn More
             </a>
         </section>
@@ -333,65 +309,59 @@
     </main>
 
     <!-- Footer -->
-    <footer id="contact" class="bg-gray-900 border-t border-vortex-primary/50 py-8">
+    <footer id="contact" class="bg-vortex-card-var border-t border-vortex-primary-var/50 py-8">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center md:text-left">
                 <!-- Col 1 -->
                 <div>
-                    <h4 class="font-title text-lg font-semibold mb-3 text-vortex-secondary">Shop</h4>
-                    <ul class="space-y-2 text-gray-400 text-sm">
-                        <li><a href="#" class="hover:text-vortex-primary transition duration-200">New Arrivals</a></li>
-                        <li><a href="#" class="hover:text-vortex-primary transition duration-200">Best Sellers</a></li>
-                        <li><a href="#" class="hover:text-vortex-primary transition duration-200">Clearance</a></li>
+                    <h4 class="font-title text-lg font-semibold mb-3 text-vortex-secondary-var">Shop</h4>
+                    <ul class="space-y-2 text-vortex-link-default text-sm">
+                        <li><a href="product.html" class="hover:text-vortex-primary-var transition duration-200">All Products</a></li>
+                        <!-- Removed Featured link -->
+                        <li><a href="#" class="hover:text-vortex-primary-var transition duration-200">Clearance</a></li>
                     </ul>
                 </div>
                 <!-- Col 2 -->
                 <div>
-                    <h4 class="font-title text-lg font-semibold mb-3 text-vortex-secondary">Support</h4>
-                    <ul class="space-y-2 text-gray-400 text-sm">
-                        <li><a href="#" class="hover:text-vortex-primary transition duration-200">FAQ</a></li>
-                        <li><a href="#" class="hover:text-vortex-primary transition duration-200">Shipping & Returns</a></li>
-                        <li><a href="#" class="hover:text-vortex-primary transition duration-200">Warranty</a></li>
+                    <h4 class="font-title text-lg font-semibold mb-3 text-vortex-secondary-var">Support</h4>
+                    <ul class="space-y-2 text-vortex-link-default text-sm">
+                        <li><a href="#" class="hover:text-vortex-primary-var transition duration-200">FAQ</a></li>
+                        <li><a href="#" class="hover:text-vortex-primary-var transition duration-200">Shipping & Returns</a></li>
+                        <li><a href="#" class="hover:text-vortex-primary-var transition duration-200">Warranty</a></li>
                     </ul>
                 </div>
                 <!-- Col 3 -->
                 <div>
-                    <h4 class="font-title text-lg font-semibold mb-3 text-vortex-secondary">Legal</h4>
-                    <ul class="space-y-2 text-gray-400 text-sm">
-                        <li><a href="#" class="hover:text-vortex-primary transition duration-200">Privacy Policy</a></li>
-                        <li><a href="#" class="hover:text-vortex-primary transition duration-200">Terms of Service</a></li>
+                    <h4 class="font-title text-lg font-semibold mb-3 text-vortex-secondary-var">Legal</h4>
+                    <ul class="space-y-2 text-vortex-link-default text-sm">
+                        <li><a href="#" class="hover:text-vortex-primary-var transition duration-200">Privacy Policy</a></li>
+                        <li><a href="#" class="hover:text-vortex-primary-var transition duration-200">Terms of Service</a></li>
                     </ul>
                 </div>
                 <!-- Col 4 -->
                 <div class="col-span-2 md:col-span-1 text-center md:text-right">
-                    <h4 class="font-title text-lg font-semibold mb-3 text-vortex-secondary">Connect</h4>
-                    <p class="text-gray-400 text-sm mb-4">Follow us across the digital void.</p>
+                    <h4 class="font-title text-lg font-semibold mb-3 text-vortex-secondary-var">Connect</h4>
+                    <p class="text-vortex-link-default text-sm mb-4">Follow us across the digital void.</p>
                     <div class="flex justify-center md:justify-end space-x-4">
-                        <!-- Simple Social Icons (Placeholder links) -->
-                        <a href="#" class="text-vortex-secondary hover:text-vortex-primary transition duration-200">
+                        <!-- Simple Social Icons -->
+                        <a href="#" class="text-vortex-secondary-var hover:text-vortex-primary-var transition duration-200 transform hover:scale-125">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
                         </a>
-                        <a href="#" class="text-vortex-secondary hover:text-vortex-primary transition duration-200">
+                        <a href="#" class="text-vortex-secondary-var hover:text-vortex-primary-var transition duration-200 transform hover:scale-125">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
                         </a>
-                        <a href="#" class="text-vortex-secondary hover:text-vortex-primary transition duration-200">
+                        <a href="#" class="text-vortex-secondary-var hover:text-vortex-primary-var transition duration-200 transform hover:scale-125">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22.54 6.42A2.78 2.78 0 0 0 20.65 4.54C19.8 4.21 15 4 12 4s-7.8.21-8.65.54A2.78 2.78 0 0 0 1.46 6.42C1.13 7.27 1 12 1 12s.13 4.73.46 5.58A2.78 2.78 0 0 0 3.35 19.46C4.2 19.79 9 20 12 20s7.8-.21 8.65-.54a2.78 2.78 0 0 0 1.89-1.89c.33-.85.46-5.58.46-5.58s-.13-4.73-.46-5.58z"/><polygon points="10 15 15 12 10 9 10 15"/></svg>
                         </a>
                     </div>
                 </div>
             </div>
 
-            <div class="mt-8 pt-6 border-t border-gray-700 text-center">
-                <p class="text-gray-500 text-sm">&copy; 2025 Vortex Shop. All rights reserved. Technology powered by Gemini.</p>
+            <div class="mt-8 pt-6 border-t border-vortex-border-subtle-var text-center">
+                <p class="text-vortex-link-default text-sm">&copy; 2025 Vortex Shop. All rights reserved. Technology powered by Gemini.</p>
             </div>
         </div>
     </footer>
 
 </body>
 </html>
-
-
-
-
-
-
